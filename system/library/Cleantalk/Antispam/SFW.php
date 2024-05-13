@@ -103,13 +103,10 @@ class SFW
                 $this->logsUpdate( $this->blocked_ip, 'blocked' );
                 $this->sfwDie( $apikey );
             }*/
-            error_log(var_export($this->pass, true));
-            error_log(var_export($this->blocked_ips, true));
             // Pass remote calls
             if ( $this->pass !== false ) {
                 if ( isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) ) {
                     foreach ( $this->blocked_ips as $ip ) {
-                        error_log(var_export($ip, true));
                         $resolved = Helper::ipResolve($ip['ip']);
                         if ( $resolved && (preg_match('/cleantalk\.org/', $resolved) === 1 || $resolved === 'back') ) {
                             $this->pass = true;
