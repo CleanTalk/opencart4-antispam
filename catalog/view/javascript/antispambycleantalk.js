@@ -122,6 +122,24 @@ function apbct_ready(){
 			};
 		}
 	}, 1000);
+
+	// Add event token hidden field to the checkout form
+	const checkoutRegisterForm = document.querySelector('#checkout-register>#form-register');
+	if ( checkoutRegisterForm !== null ) {
+		try {
+			const eventToken = JSON.parse(localStorage.getItem('bot_detector_event_token')).value;
+			let hiddenInput = document.createElement( 'input' );
+			hiddenInput.setAttribute( 'type', 'hidden' );
+			let rnd = 100 + Math.floor(Math.random() * 899);
+			rnd = rnd.toString() + i.toString().substring(-1);
+			hiddenInput.setAttribute( 'id', 'ct_bot_detector_event_token_' + rnd );
+			hiddenInput.setAttribute( 'name', 'ct_bot_detector_event_token');
+			hiddenInput.value = eventToken;
+			checkoutRegisterForm.append( hiddenInput );
+		} catch (e) {
+			console.log(`CleanTalk error: event_token is not provided ${e.toString()}`);
+		}
+	}
 }
 apbct_attach_event_handler(window, "DOMContentLoaded", apbct_ready);
 
