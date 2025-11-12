@@ -22,7 +22,7 @@ class AntispamByCleantalk extends \Opencart\System\Engine\Controller
         $this->document->addScript(
             'extension/antispambycleantalk/catalog/view/javascript/antispambycleantalk.js' . $ver
         );
-        $this->document->addScript('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+        $this->document->addScript('https://fd.cleantalk.org/ct-bot-detector-wrapper.js');
         $this->extension_antispambycleantalk_core->setCookie();
     }
 
