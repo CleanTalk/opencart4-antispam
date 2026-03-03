@@ -428,13 +428,13 @@ class Helper
      *
      * @return false|string
      */
-    public static function ipResolveCleantalks($ip)
+    public static function isCleanTalkServer($ip)
     {
-        if ( self::ipValidate($ip) ) {
-            $url = array_search($ip, self::$cleantalks_servers);
-            return $url ?: self::ipResolve($ip);
+        $pattern = '/^(api|apix[0-9]+|moderate|moderate[0-9]+)\.cleantalk\.(org|ru)$/';
+        $validated_host = self::ipResolve($ip);
+        if ($validated_host && preg_match($pattern, $validated_host)) {
+            return $validated_host;
         }
-
         return false;
     }
 
