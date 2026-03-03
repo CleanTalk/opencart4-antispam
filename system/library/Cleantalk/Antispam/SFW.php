@@ -104,15 +104,13 @@ class SFW
                 $this->sfwDie( $apikey );
             }*/
             // Pass remote calls
-            if ( $this->pass !== false ) {
-                if ( isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) ) {
-                    foreach ( $this->blocked_ips as $ip ) {
-                        $resolved = Helper::ipResolve($ip['ip']);
-                        if ( $resolved && (preg_match('/cleantalk\.org/', $resolved) === 1 || $resolved === 'back') ) {
-                            $this->pass = true;
-                        }
-                    }
-                    unset($ip);
+            if( $this->pass === false ){
+                // todo Refactor RemoteCalls::check() to run this check before SFW started
+                if(
+                    isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) &&
+                    $_GET['spbc_remote_call_token'] === md5($apikey)
+                ){
+                    $this->pass = true;
                 }
             }
 
