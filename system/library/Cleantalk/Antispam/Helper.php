@@ -405,7 +405,7 @@ class Helper
 
         // If gethostbyaddr returns the IP itself, it means no PTR record exists
         if (!$hostname || $hostname === $ip) {
-            return false;
+            return $ip;
         }
 
         // Forward DNS lookup - use dns_get_record() to support both IPv4 (A) and IPv6 (AAAA) records
