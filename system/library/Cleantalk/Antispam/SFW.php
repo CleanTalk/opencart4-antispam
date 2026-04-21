@@ -103,7 +103,7 @@ class SFW
             if ( $this->pass === false ) {
                 // todo Refactor RemoteCalls::check() to run this check before SFW started
                 if ( isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) ) {
-                    $rc_token_correct = strtolower($_GET['spbc_remote_call_token']) === strtolower(md5($apikey));
+                    $rc_token_correct = is_string($_GET['spbc_remote_call_token']) && strtolower($_GET['spbc_remote_call_token']) === strtolower(md5($apikey));
                     $rc_action_correct = in_array($_GET['spbc_remote_call_action'], RemoteCalls::getAllowedRemoteActions(), true);
                     $rc_plugin_name_correct = in_array($_GET['plugin_name'], array('antispam', 'anti-spam', 'apbct'), true);
                     if ( $rc_token_correct && $rc_action_correct && $rc_plugin_name_correct ) {
