@@ -39,26 +39,6 @@ class Helper
     );
 
     /**
-     * @var array Set of CleanTalk servers
-     */
-    public static $cleantalks_servers = array(
-        // MODERATE
-        'moderate1.cleantalk.org' => '162.243.144.175',
-        'moderate2.cleantalk.org' => '159.203.121.181',
-        'moderate3.cleantalk.org' => '88.198.153.60',
-        'moderate4.cleantalk.org' => '159.69.51.30',
-        'moderate5.cleantalk.org' => '95.216.200.119',
-        'moderate6.cleantalk.org' => '138.68.234.8',
-        // APIX
-        'apix1.cleantalk.org' => '35.158.52.161',
-        'apix2.cleantalk.org' => '18.206.49.217',
-        'apix3.cleantalk.org' => '3.18.23.246',
-        //ns
-        'netserv2.cleantalk.org' => '178.63.60.214',
-        'netserv3.cleantalk.org' => '188.40.14.173',
-    );
-
-    /**
      * Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
      *
      * @param array $ip_types Type of IP you want to receive
@@ -405,40 +385,6 @@ class Helper
     }
 
     /**
-     * Get URL form IP. Check if it's belong to cleantalk.
-     *
-     * @param string $ip
-     *
-     * @return false|int|string
-     */
-    public static function ipIsCleantalks($ip)
-    {
-        if ( self::ipValidate($ip) ) {
-            $url = array_search($ip, self::$cleantalks_servers);
-            return (bool) $url;
-        }
-
-        return false;
-    }
-
-    /**
-     * Get URL form IP. Check if it's belong to cleantalk.
-     *
-     * @param $ip
-     *
-     * @return false|string
-     */
-    public static function ipResolveCleantalks($ip)
-    {
-        $pattern = '/^(api|apix[0-9]+|moderate|moderate[0-9]+)\.cleantalk\.(org|ru)$/';
-        $validated_host = self::ipResolve($ip);
-        if ($validated_host && preg_match($pattern, $validated_host)) {
-            return $validated_host;
-        }
-        return false;
-    }
-
-    /**
      * Resolve IP to hostname with FCrDNS (Forward-Confirmed reverse DNS) verification.
      * Protects against PTR spoofing by verifying the hostname resolves back to the same IP.
      *
@@ -498,35 +444,6 @@ class Helper
         }
 
         return false;
-    }
-
-    /**
-     * Resolve DNS to IP
-     *
-     * @param      $host
-     * @param bool $out
-     *
-     * @return bool
-     */
-    public static function dnsResolve($host, $out = false)
-    {
-        // Get DNS records about URL
-        if ( function_exists('dns_get_record') ) {
-            $records = dns_get_record($host, DNS_A);
-            if ( $records !== false ) {
-                $out = $records[0]['ip'];
-            }
-        }
-
-        // Another try if first failed
-        if ( !$out && function_exists('gethostbynamel') ) {
-            $records = gethostbynamel($host);
-            if ( $records !== false ) {
-                $out = $records[0];
-            }
-        }
-
-        return $out;
     }
 
     /**
@@ -670,36 +587,6 @@ class Helper
     {
         foreach ( $arr2 as $key => $val ) {
             $arr1[$key] = $val;
-        }
-        return $arr1;
-    }
-
-    /**
-     * Merging arrays without reseting numeric keys recursive
-     *
-     * @param array $arr1 One-dimentional array
-     * @param array $arr2 One-dimentional array
-     *
-     * @return array Merged array
-     */
-    public static function arrayMergeSaveNumericKeysRecursive($arr1, $arr2)
-    {
-        foreach ( $arr2 as $key => $val ) {
-            // Array | array => array
-            if ( isset($arr1[$key]) && is_array($arr1[$key]) && is_array($val) ) {
-                $arr1[$key] = self::arrayMergeSaveNumericKeysRecursive($arr1[$key], $val);
-                // Scalar | array => array
-            } elseif ( isset($arr1[$key]) && !is_array($arr1[$key]) && is_array($val) ) {
-                $tmp = $arr1[$key];
-                $arr1[$key] = $val;
-                $arr1[$key][] = $tmp;
-                // array  | scalar => array
-            } elseif ( isset($arr1[$key]) && is_array($arr1[$key]) && !is_array($val) ) {
-                $arr1[$key][] = $val;
-                // scalar | scalar => scalar
-            } else {
-                $arr1[$key] = $val;
-            }
         }
         return $arr1;
     }
