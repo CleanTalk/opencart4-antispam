@@ -390,7 +390,7 @@ class Helper
      *
      * @param string $ip IP address to resolve
      *
-     * @return string|false Verified hostname or false on failure
+     * @return string|false Verified hostname, original IP if unverifiable, or false on failure
      */
     public static function ipResolve($ip)
     {
