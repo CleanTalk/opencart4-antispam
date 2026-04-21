@@ -408,13 +408,12 @@ class Helper
             return $ip;
         }
 
-        // Forward DNS lookup - use dns_get_record() to support both IPv4 (A) and IPv6 (AAAA) records
-        $record_type = ($ip_version === 'v6') ? DNS_AAAA : DNS_A;
         $ip_field = ($ip_version === 'v6') ? 'ipv6' : 'ip';
         $records = [];
 
-        // Get DNS records about hostname
+        // Forward DNS lookup - use dns_get_record() to support both IPv4 (A) and IPv6 (AAAA) records
         if ( function_exists('dns_get_record') ) {
+            $record_type = ($ip_version === 'v6') ? DNS_AAAA : DNS_A;
             $dns_records = dns_get_record($hostname, $record_type);
             if ( $dns_records !== false ) {
                 $records = $dns_records;
