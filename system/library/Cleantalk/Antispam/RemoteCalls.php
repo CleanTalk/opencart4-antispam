@@ -6,7 +6,7 @@ use Cleantalk\Common\Get;
 
 class RemoteCalls
 {
-    public static $allowed_remote_actions = array(
+    private static $allowed_remote_actions = array(
         'sfwUpdate',
         'sfw_send_logs',
     );
@@ -35,7 +35,7 @@ class RemoteCalls
         $action = Get::get('spbc_remote_call_action');
         $token = Get::get('spbc_remote_call_token');
 
-        if ( in_array($action, self::$allowed_remote_actions) ) {
+        if ( in_array($action, self::getAllowedRemoteActions()) ) {
             if ( strtolower($token) == strtolower(md5($apikey)) ) {
                 switch ( $action ) {
                     // SFW update
@@ -93,5 +93,10 @@ class RemoteCalls
         } else {
             die('FAIL ' . json_encode(array('error' => 'UNKNOWN_ACTION')));
         }
+    }
+
+    public static function getAllowedRemoteActions()
+    {
+        return static::$allowed_remote_actions;
     }
 }
