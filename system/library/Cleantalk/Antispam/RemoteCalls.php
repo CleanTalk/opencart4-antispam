@@ -6,7 +6,7 @@ use Cleantalk\Common\Get;
 
 class RemoteCalls
 {
-    private static $allowed_remote_actions = array(
+    public static $allowed_remote_actions = array(
         'sfwUpdate',
         'sfw_send_logs',
     );
