@@ -419,7 +419,15 @@ class Helper
 
         // Another try if first failed (only for v4)
         if ( empty($records) && function_exists('gethostbynamel') ) {
-            $records = gethostbynamel($hostname);
+            $ips_v4 = gethostbynamel($hostname);
+            if ( $ips_v4 !== false ) {
+                foreach ( $ips_v4 as $_ip ) {
+                    $records[] = array(
+                        "ip" => $_ip,
+                        "host" => $hostname
+                    );
+                }
+            }
         }
 
         // If forward lookup fails, we can't verify
