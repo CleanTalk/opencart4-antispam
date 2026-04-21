@@ -104,12 +104,12 @@ class SFW
                 $this->sfwDie( $apikey );
             }*/
             // Pass remote calls
-            if( $this->pass === false ){
+            if ( $this->pass === false ) {
                 // todo Refactor RemoteCalls::check() to run this check before SFW started
-                if(
+                if (
                     isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) &&
                     $_GET['spbc_remote_call_token'] === md5($apikey)
-                ){
+                ) {
                     $this->pass = true;
                 }
             }

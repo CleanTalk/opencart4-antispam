@@ -428,7 +428,7 @@ class Helper
      *
      * @return false|string
      */
-    public static function isCleanTalkServer($ip)
+    public static function ipResolveCleantalks($ip)
     {
         $pattern = '/^(api|apix[0-9]+|moderate|moderate[0-9]+)\.cleantalk\.(org|ru)$/';
         $validated_host = self::ipResolve($ip);
@@ -439,11 +439,12 @@ class Helper
     }
 
     /**
-     * Get URL form IP
+     * Resolve IP to hostname with FCrDNS (Forward-Confirmed reverse DNS) verification.
+     * Protects against PTR spoofing by verifying the hostname resolves back to the same IP.
      *
-     * @param $ip
+     * @param string $ip IP address to resolve
      *
-     * @return string|false
+     * @return string|false Verified hostname or false on failure
      */
     public static function ipResolve($ip)
     {
