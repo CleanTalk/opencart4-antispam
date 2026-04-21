@@ -413,12 +413,16 @@ class Helper
         $ip_field = ($ip_version === 'v6') ? 'ipv6' : 'ip';
         $records = [];
 
+        // Get DNS records about hostname
         if ( function_exists('dns_get_record') ) {
-            $records = dns_get_record($hostname, $record_type);
+            $dns_records = dns_get_record($hostname, $record_type);
+            if ( $dns_records !== false ) {
+                $records = $dns_records;
+            }
         }
 
         // Another try if first failed (only for v4)
-        if ( empty($records) && function_exists('gethostbynamel') ) {
+        if ( empty($records) && $ip_version === 'v4' && function_exists('gethostbynamel') ) {
             $ips_v4 = gethostbynamel($hostname);
             if ( $ips_v4 !== false ) {
                 foreach ( $ips_v4 as $_ip ) {
