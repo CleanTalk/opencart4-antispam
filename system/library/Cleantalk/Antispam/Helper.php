@@ -267,33 +267,31 @@ class Helper
         }
 
         // Length of bits for comparison
-        $mask = $mask - $xtet_base * $xtet_count >= $xtet_base ? $xtet_base : $mask - $xtet_base * $xtet_count;
+        $mask = min($mask - $xtet_base * $xtet_count, $xtet_base);
 
         // Explode by octets/hextets from IP and Net
         $net_ip_xtets = explode($ip_type === 'v4' ? '.' : ':', $net_ip);
         $ip_xtets = explode($ip_type === 'v4' ? '.' : ':', $ip);
 
-        // Standartizing. Getting current octets/hextets. Adding leading zeros.
-        $net_xtet = str_pad(
-            decbin(
-                ($ip_type === 'v4' && (int)$net_ip_xtets[$xtet_count]) ? $net_ip_xtets[$xtet_count] : @hexdec(
-                    $net_ip_xtets[$xtet_count]
-                )
-            ),
-            $xtet_base,
-            0,
-            STR_PAD_LEFT
-        );
-        $ip_xtet = str_pad(
-            decbin(
-                ($ip_type === 'v4' && (int)$ip_xtets[$xtet_count]) ? $ip_xtets[$xtet_count] : @hexdec(
-                    $ip_xtets[$xtet_count]
-                )
-            ),
-            $xtet_base,
-            0,
-            STR_PAD_LEFT
-        );
+        // Standardizing. Getting current octets/hextets. Adding leading zeros.
+        $net_part = isset($net_ip_xtets[$xtet_count]) ? $net_ip_xtets[$xtet_count] : '';
+        $ip_part  = isset($ip_xtets[$xtet_count]) ? $ip_xtets[$xtet_count] : '';
+
+        if ($ip_type === 'v4') {
+            $net_val = (int)$net_part;
+            $ip_val  = (int)$ip_part;
+        } else {
+            // Validate hex to avoid PHP warning in hexdec()
+            if (!preg_match('/^[0-9a-f]{1,4}$/i', $net_part) || !preg_match('/^[0-9a-f]{1,4}$/i', $ip_part)) {
+                return false;
+            }
+
+            $net_val = hexdec($net_part);
+            $ip_val  = hexdec($ip_part);
+        }
+
+        $net_xtet = str_pad(decbin($net_val), $xtet_base, 0, STR_PAD_LEFT);
+        $ip_xtet  = str_pad(decbin($ip_val), $xtet_base, 0, STR_PAD_LEFT);
 
         // Comparing bit by bit
         for ( $i = 0, $result = true; $mask != 0; $mask--, $i++ ) {
