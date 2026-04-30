@@ -39,26 +39,6 @@ class Helper
     );
 
     /**
-     * @var array Set of CleanTalk servers
-     */
-    public static $cleantalks_servers = array(
-        // MODERATE
-        'moderate1.cleantalk.org' => '162.243.144.175',
-        'moderate2.cleantalk.org' => '159.203.121.181',
-        'moderate3.cleantalk.org' => '88.198.153.60',
-        'moderate4.cleantalk.org' => '159.69.51.30',
-        'moderate5.cleantalk.org' => '95.216.200.119',
-        'moderate6.cleantalk.org' => '138.68.234.8',
-        // APIX
-        'apix1.cleantalk.org' => '35.158.52.161',
-        'apix2.cleantalk.org' => '18.206.49.217',
-        'apix3.cleantalk.org' => '3.18.23.246',
-        //ns
-        'netserv2.cleantalk.org' => '178.63.60.214',
-        'netserv3.cleantalk.org' => '188.40.14.173',
-    );
-
-    /**
      * Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
      *
      * @param array $ip_types Type of IP you want to receive
@@ -403,84 +383,84 @@ class Helper
     }
 
     /**
-     * Get URL form IP. Check if it's belong to cleantalk.
+     * Resolve IP to hostname with FCrDNS (Forward-Confirmed reverse DNS) verification.
+     * Protects against PTR spoofing by verifying the hostname resolves back to the same IP.
      *
-     * @param string $ip
+     * @param string $ip IP address to resolve
      *
-     * @return false|int|string
-     */
-    public static function ipIsCleantalks($ip)
-    {
-        if ( self::ipValidate($ip) ) {
-            $url = array_search($ip, self::$cleantalks_servers);
-            return (bool) $url;
-        }
-
-        return false;
-    }
-
-    /**
-     * Get URL form IP. Check if it's belong to cleantalk.
-     *
-     * @param $ip
-     *
-     * @return false|int|string
-     */
-    public static function ipResolveCleantalks($ip)
-    {
-        if ( self::ipValidate($ip) ) {
-            $url = array_search($ip, self::$cleantalks_servers);
-            return $url ?: self::ipResolve($ip);
-        }
-
-        return $ip;
-    }
-
-    /**
-     * Get URL form IP
-     *
-     * @param $ip
-     *
-     * @return string
+     * @return string|false Verified hostname, original IP if unverifiable, or false on failure
      */
     public static function ipResolve($ip)
     {
-        if ( self::ipValidate($ip) ) {
-            $url = gethostbyaddr($ip);
-            if ( $url ) {
-                return $url;
-            }
+        // Validate IP first
+        $ip_version = self::ipValidate($ip);
+        if (!$ip_version) {
+            return false;
         }
-        return $ip;
-    }
 
-    /**
-     * Resolve DNS to IP
-     *
-     * @param      $host
-     * @param bool $out
-     *
-     * @return bool
-     */
-    public static function dnsResolve($host, $out = false)
-    {
-        // Get DNS records about URL
+        // Reverse DNS lookup (PTR record)
+        $hostname = gethostbyaddr($ip);
+
+        // If gethostbyaddr returns the IP itself, it means no PTR record exists
+        if (!$hostname || $hostname === $ip) {
+            return $ip;
+        }
+
+        $ip_field = ($ip_version === 'v6') ? 'ipv6' : 'ip';
+        $records = [];
+
+        // Forward DNS lookup - use dns_get_record() to support both IPv4 (A) and IPv6 (AAAA) records
         if ( function_exists('dns_get_record') ) {
-            $records = dns_get_record($host, DNS_A);
-            if ( $records !== false ) {
-                $out = $records[0]['ip'];
+            $record_type = ($ip_version === 'v6') ? DNS_AAAA : DNS_A;
+            $dns_records = dns_get_record($hostname, $record_type);
+            if ( $dns_records !== false ) {
+                $records = $dns_records;
             }
         }
 
-        // Another try if first failed
-        if ( !$out && function_exists('gethostbynamel') ) {
-            $records = gethostbynamel($host);
-            if ( $records !== false ) {
-                $out = $records[0];
+        // Another try if first failed (only for v4)
+        if ( empty($records) && $ip_version === 'v4' && function_exists('gethostbynamel') ) {
+            $ips_v4 = gethostbynamel($hostname);
+            if ( $ips_v4 !== false ) {
+                foreach ( $ips_v4 as $_ip ) {
+                    $records[] = array(
+                        "ip" => $_ip,
+                        "host" => $hostname
+                    );
+                }
             }
         }
 
-        return $out;
+        // If forward lookup fails, we can't verify
+        if ( empty($records) ) {
+            return false;
+        }
+
+        // Extract IPs from DNS records
+        $forward_ips = array();
+        foreach ($records as $record) {
+            if (isset($record[$ip_field])) {
+                $forward_ips[] = $record[$ip_field];
+            }
+        }
+
+        if (empty($forward_ips)) {
+            return false;
+        }
+
+        // Check if the original IP is in the list of IPs the hostname resolves to
+        if ($ip_version === 'v6') {
+            $normalized_ip = self::ipV6Normalize($ip);
+            foreach ($forward_ips as $forward_ip) {
+                if (self::ipV6Normalize($forward_ip) === $normalized_ip) {
+                    return $hostname;
+                }
+            }
+        } elseif (in_array($ip, $forward_ips, true)) {
+            return $hostname;
+        }
+
+        return false;
     }
 
     /**
@@ -624,36 +604,6 @@ class Helper
     {
         foreach ( $arr2 as $key => $val ) {
             $arr1[$key] = $val;
-        }
-        return $arr1;
-    }
-
-    /**
-     * Merging arrays without reseting numeric keys recursive
-     *
-     * @param array $arr1 One-dimentional array
-     * @param array $arr2 One-dimentional array
-     *
-     * @return array Merged array
-     */
-    public static function arrayMergeSaveNumericKeysRecursive($arr1, $arr2)
-    {
-        foreach ( $arr2 as $key => $val ) {
-            // Array | array => array
-            if ( isset($arr1[$key]) && is_array($arr1[$key]) && is_array($val) ) {
-                $arr1[$key] = self::arrayMergeSaveNumericKeysRecursive($arr1[$key], $val);
-                // Scalar | array => array
-            } elseif ( isset($arr1[$key]) && !is_array($arr1[$key]) && is_array($val) ) {
-                $tmp = $arr1[$key];
-                $arr1[$key] = $val;
-                $arr1[$key][] = $tmp;
-                // array  | scalar => array
-            } elseif ( isset($arr1[$key]) && is_array($arr1[$key]) && !is_array($val) ) {
-                $arr1[$key][] = $val;
-                // scalar | scalar => scalar
-            } else {
-                $arr1[$key] = $val;
-            }
         }
         return $arr1;
     }

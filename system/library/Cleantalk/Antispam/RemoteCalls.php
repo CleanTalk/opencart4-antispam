@@ -35,8 +35,8 @@ class RemoteCalls
         $action = Get::get('spbc_remote_call_action');
         $token = Get::get('spbc_remote_call_token');
 
-        if ( in_array($action, self::$allowed_remote_actions) ) {
-            if ( strtolower($token) == strtolower(md5($apikey)) ) {
+        if ( is_string($action) && in_array($action, self::getAllowedRemoteActions(), true) ) {
+            if ( is_string($token) && strtolower($token) === strtolower(md5($apikey)) ) {
                 switch ( $action ) {
                     // SFW update
                     case 'sfwUpdate':
@@ -93,5 +93,10 @@ class RemoteCalls
         } else {
             die('FAIL ' . json_encode(array('error' => 'UNKNOWN_ACTION')));
         }
+    }
+
+    public static function getAllowedRemoteActions()
+    {
+        return static::$allowed_remote_actions;
     }
 }
